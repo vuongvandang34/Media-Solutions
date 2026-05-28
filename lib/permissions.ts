@@ -9,21 +9,21 @@ export interface PermUser {
  * BUSINESS_OWNER and MANAGER can create and edit staff.
  */
 export function canManageStaff(user: PermUser): boolean {
-  return [UserRole.BUSINESS_OWNER, UserRole.MANAGER].includes(user.role);
+  return ([UserRole.BUSINESS_OWNER, UserRole.MANAGER] as UserRole[]).includes(user.role);
 }
 
 /**
  * BUSINESS_OWNER and MANAGER can create and edit customers.
  */
 export function canManageCustomers(user: PermUser): boolean {
-  return [UserRole.BUSINESS_OWNER, UserRole.MANAGER].includes(user.role);
+  return ([UserRole.BUSINESS_OWNER, UserRole.MANAGER] as UserRole[]).includes(user.role);
 }
 
 /**
  * BUSINESS_OWNER and MANAGER can create and edit surveys.
  */
 export function canManageSurveys(user: PermUser): boolean {
-  return [UserRole.BUSINESS_OWNER, UserRole.MANAGER].includes(user.role);
+  return ([UserRole.BUSINESS_OWNER, UserRole.MANAGER] as UserRole[]).includes(user.role);
 }
 
 /**

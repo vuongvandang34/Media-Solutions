@@ -70,6 +70,8 @@ export async function getCurrentUser() {
             status: true,
             subscriptionStartAt: true,
             subscriptionEndAt: true,
+            logoUrl: true,
+            promotionPhotoUrl: true,
             plan: {
               select: {
                 id: true,
