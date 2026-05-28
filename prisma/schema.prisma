@@ -1,0 +1,142 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Tenant {
+  id                    String        @id @default(cuid())
+  tenantCode            String        @unique
+  businessName          String
+  businessAddress       String
+  country               String
+  ownerName             String
+  ownerEmail            String
+  ownerPhone            String
+  status                TenantStatus  @default(PENDING)
+
+  planId                String?
+  plan                  Plan?         @relation(fields: [planId], references: [id])
+
+  subscriptionStartAt   DateTime?
+  subscriptionEndAt     DateTime?
+
+  users                 User[]
+  auditLogs             AuditLog[]
+
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+
+  @@index([status])
+  @@index([planId])
+}
+
+model User {
+  id                    String      @id @default(cuid())
+  tenantId              String?
+  tenant                Tenant?     @relation(fields: [tenantId], references: [id])
+
+  fullName              String
+  email                 String      @unique
+  phone                 String?
+  passwordHash          String
+
+  role                  UserRole
+  status                UserStatus  @default(PENDING)
+
+  emailVerifiedAt       DateTime?
+
+  emailVerificationToken          String?
+  emailVerificationTokenExpiresAt DateTime?
+
+  resetPasswordToken              String?
+  resetPasswordTokenExpiresAt     DateTime?
+
+  failedLoginAttempts   Int         @default(0)
+  captchaRequired       Boolean     @default(false)
+  lockedUntil           DateTime?
+
+  lastLoginAt           DateTime?
+
+  auditLogs             AuditLog[]
+
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+
+  @@index([tenantId])
+  @@index([role])
+  @@index([status])
+}
+
+model Plan {
+  id                            String   @id @default(cuid())
+  name                          String   @unique
+  displayName                   String
+
+  maxStaff                      Int
+  maxMonthlySurveyResponses     Int
+
+  allowTelegramAlert            Boolean  @default(false)
+  allowMultiLanguage            Boolean  @default(false)
+  allowPromotionPhoto           Boolean  @default(false)
+  allowAiTranslation            Boolean  @default(false)
+  allowAiCrisisChatbot          Boolean  @default(false)
+
+  priceMonthly                  Decimal
+  currency                      String   @default("USD")
+
+  tenants                       Tenant[]
+
+  createdAt                     DateTime @default(now())
+  updatedAt                     DateTime @updatedAt
+}
+
+model AuditLog {
+  id              String    @id @default(cuid())
+
+  tenantId        String?
+  tenant          Tenant?   @relation(fields: [tenantId], references: [id])
+
+  userId          String?
+  user            User?     @relation(fields: [userId], references: [id])
+
+  action          String
+  entityType      String?
+  entityId        String?
+
+  oldValueJson    Json?
+  newValueJson    Json?
+
+  ipAddress       String?
+  userAgent       String?
+
+  createdAt       DateTime  @default(now())
+
+  @@index([tenantId])
+  @@index([userId])
+  @@index([action])
+}
+
+enum TenantStatus {
+  PENDING
+  ACTIVE
+  EXPIRED
+  BANNED
+}
+
+enum UserStatus {
+  PENDING
+  ACTIVE
+  LOCKED
+  DISABLED
+}
+
+enum UserRole {
+  PLATFORM_OWNER
+  BUSINESS_OWNER
+  MANAGER
+  STAFF
+}

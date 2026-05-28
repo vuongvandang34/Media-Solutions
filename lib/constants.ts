@@ -1,0 +1,22 @@
+export const SESSION_COOKIE_NAME = 'auth_token';
+
+export const SYSTEM_ROLES = {
+  PLATFORM_OWNER: 'PLATFORM_OWNER',
+  BUSINESS_OWNER: 'BUSINESS_OWNER',
+  MANAGER: 'MANAGER',
+  STAFF: 'STAFF',
+} as const;
+
+export const TENANT_STATUSES = {
+  PENDING: 'PENDING',
+  ACTIVE: 'ACTIVE',
+  EXPIRED: 'EXPIRED',
+  BANNED: 'BANNED',
+} as const;
+
+export const USER_STATUSES = {
+  PENDING: 'PENDING',
+  ACTIVE: 'ACTIVE',
+  LOCKED: 'LOCKED',
+  DISABLED: 'DISABLED',
+} as const;
