@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { User, LogOut, ChevronDown, Building, ShieldCheck } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import LanguageSelector from './LanguageSelector';
 
 interface HeaderProps {
   user: {
@@ -56,12 +57,15 @@ export default function Header({ user, tenantName }: HeaderProps) {
         </span>
       </div>
 
-      {/* Right side profile */}
-      <div className="relative">
-        <button
-          onClick={() => setDropdownOpen(!dropdownOpen)}
-          className="flex items-center gap-3 rounded-lg border border-slate-800 bg-slate-900/40 px-3 py-1.5 text-sm transition hover:bg-slate-800/80"
-        >
+      {/* Right side profile & translation */}
+      <div className="flex items-center gap-4">
+        <LanguageSelector />
+
+        <div className="relative">
+          <button
+            onClick={() => setDropdownOpen(!dropdownOpen)}
+            className="flex items-center gap-3 rounded-lg border border-slate-800 bg-slate-900/40 px-3 py-1.5 text-sm transition hover:bg-slate-800/80"
+          >
           <div className="flex h-7 w-7 items-center justify-center rounded-full bg-indigo-600/10 text-indigo-400">
             <User className="h-4 w-4" />
           </div>
@@ -103,6 +107,7 @@ export default function Header({ user, tenantName }: HeaderProps) {
           </>
         )}
       </div>
-    </header>
-  );
+    </div>
+  </header>
+);
 }
