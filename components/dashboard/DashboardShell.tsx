@@ -10,13 +10,19 @@ interface DashboardShellProps {
     role: string;
   };
   tenantName?: string;
+  currentPath?: string;
 }
 
-export default function DashboardShell({ children, user, tenantName }: DashboardShellProps) {
+export default function DashboardShell({
+  children,
+  user,
+  tenantName,
+  currentPath = '/dashboard',
+}: DashboardShellProps) {
   return (
     <div className="min-h-screen bg-slate-950 font-sans text-slate-200 antialiased">
       {/* Left Sidebar Menu */}
-      <Sidebar currentPath="/dashboard" />
+      <Sidebar currentPath={currentPath} userRole={user.role} />
 
       {/* Main Workspace Frame */}
       <div className="pl-64">

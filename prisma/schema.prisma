@@ -24,8 +24,16 @@ model Tenant {
   subscriptionStartAt   DateTime?
   subscriptionEndAt     DateTime?
 
+  logoUrl               String?
+  promotionPhotoUrl     String?
+
   users                 User[]
   auditLogs             AuditLog[]
+  businessAssets        BusinessAsset[]
+  staff                 Staff[]
+  customerFieldConfigs  CustomerFieldConfig[]
+  customers             Customer[]
+  surveys               Survey[]
 
   createdAt             DateTime      @default(now())
   updatedAt             DateTime      @updatedAt
@@ -62,6 +70,7 @@ model User {
   lastLoginAt           DateTime?
 
   auditLogs             AuditLog[]
+  surveys               Survey[]
 
   createdAt             DateTime    @default(now())
   updatedAt             DateTime    @updatedAt
@@ -139,4 +148,240 @@ enum UserRole {
   BUSINESS_OWNER
   MANAGER
   STAFF
+}
+
+model BusinessAsset {
+  id          String            @id @default(cuid())
+  tenantId    String
+  tenant      Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  type        BusinessAssetType
+  fileUrl     String
+  fileName    String
+  fileSize    Int
+  mimeType    String
+
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  @@index([tenantId])
+  @@index([type])
+}
+
+enum BusinessAssetType {
+  LOGO
+  PROMOTION_PHOTO
+}
+
+model Staff {
+  id          String       @id @default(cuid())
+  tenantId    String
+  tenant      Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  staffCode   String
+  fullName    String
+  phone       String?
+  avatarUrl   String?
+  status      StaffStatus  @default(ACTIVE)
+
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  @@unique([tenantId, staffCode])
+  @@index([tenantId])
+  @@index([status])
+}
+
+enum StaffStatus {
+  ACTIVE
+  ABSENT
+  RESIGNED
+}
+
+model CustomerFieldConfig {
+  id          String            @id @default(cuid())
+  tenantId    String
+  tenant      Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  fieldKey    String
+  fieldLabel  String
+  fieldType   CustomerFieldType
+  isRequired  Boolean           @default(false)
+  isEnabled   Boolean           @default(true)
+  orderIndex  Int               @default(0)
+
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  @@unique([tenantId, fieldKey])
+  @@index([tenantId])
+}
+
+enum CustomerFieldType {
+  TEXT
+  EMAIL
+  PHONE
+  DATE
+  URL
+  TEXTAREA
+}
+
+model Customer {
+  id            String          @id @default(cuid())
+  tenantId      String
+  tenant        Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  customerCode  String
+  name          String
+  phone         String
+  email         String?
+  birthday      DateTime?
+  website       String?
+  company       String?
+  address       String?
+  note          String?
+
+  status        CustomerStatus  @default(ACTIVE)
+  averageRating Decimal?        @db.Decimal(3, 2)
+
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  @@unique([tenantId, customerCode])
+  @@index([tenantId])
+  @@index([phone])
+  @@index([email])
+  @@index([status])
+}
+
+enum CustomerStatus {
+  ACTIVE
+  LOCKED
+}
+
+model Survey {
+  id              String            @id @default(cuid())
+  tenantId        String
+  tenant          Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  name            String
+  description     String?
+  greetingText    String?
+  status          SurveyStatus      @default(DRAFT)
+  modelType       SurveyModelType   @default(ONE_PART)
+  defaultLanguage String            @default("en")
+
+  goodThreshold   Int               @default(4)
+  badThreshold    Int               @default(2)
+
+  createdById     String?
+  createdBy       User?             @relation(fields: [createdById], references: [id])
+
+  blocks          SurveyBlock[]
+  questions       SurveyQuestion[]
+
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  @@index([tenantId])
+  @@index([status])
+  @@index([createdById])
+}
+
+enum SurveyStatus {
+  DRAFT
+  ACTIVE
+  LOCKED
+}
+
+enum SurveyModelType {
+  ONE_PART
+  TWO_PARTS
+  THREE_PARTS
+}
+
+model SurveyBlock {
+  id            String            @id @default(cuid())
+
+  surveyId      String
+  survey        Survey            @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+
+  blockOrder    Int
+  blockGroup    SurveyBlockGroup
+  blockType     SurveyBlockType
+  title         String?
+
+  questions     SurveyQuestion[]
+
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  @@index([surveyId])
+  @@index([blockType])
+}
+
+enum SurveyBlockGroup {
+  EXPERIENCE_METRIC
+  CHOICE_QUESTION
+  DATA_COLLECTION
+}
+
+enum SurveyBlockType {
+  CES
+  CSAT
+  NPS
+  SINGLE_CHOICE
+  MULTIPLE_CHOICE
+  OPEN_TEXT
+  CONTACT_INFO
+  FILE_UPLOAD
+}
+
+model SurveyQuestion {
+  id            String              @id @default(cuid())
+
+  surveyId      String
+  survey        Survey              @relation(fields: [surveyId], references: [id], onDelete: Cascade)
+
+  blockId       String
+  block         SurveyBlock         @relation(fields: [blockId], references: [id], onDelete: Cascade)
+
+  questionText  String
+  questionType  SurveyQuestionType
+  isRequired    Boolean             @default(true)
+  orderIndex    Int                 @default(0)
+  metadataJson  Json?
+
+  options       SurveyOption[]
+
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+
+  @@index([surveyId])
+  @@index([blockId])
+}
+
+enum SurveyQuestionType {
+  RATING
+  NPS
+  SINGLE_CHOICE
+  MULTIPLE_CHOICE
+  OPEN_TEXT
+  CONTACT_INFO
+  FILE_UPLOAD
+}
+
+model SurveyOption {
+  id            String          @id @default(cuid())
+
+  questionId    String
+  question      SurveyQuestion  @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  optionText    String
+  orderIndex    Int             @default(0)
+
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  @@index([questionId])
 }
