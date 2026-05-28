@@ -1,5 +1,5 @@
 import { prisma } from '../lib/prisma';
-import { UserRole, UserStatus } from '@prisma/client';
+import { UserRole, UserStatus, TenantStatus } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 
 async function main() {
@@ -86,6 +86,66 @@ async function main() {
       passwordHash,
       role: UserRole.PLATFORM_OWNER,
       status: UserStatus.ACTIVE,
+      emailVerifiedAt: new Date(),
+    },
+  });
+
+  // 3. Seed a BUSINESS_OWNER user and a Tenant (Premium Plan)
+  const businessEmail = 'business@example.com';
+  const businessPassword = 'Business@123456';
+  const businessPasswordHash = await bcrypt.hash(businessPassword, 10);
+
+  console.log(`Seeding premium tenant and user: ${businessEmail}...`);
+  const premiumPlan = await prisma.plan.findUnique({
+    where: { name: 'Premium' },
+  });
+
+  const tenant = await prisma.tenant.upsert({
+    where: { tenantCode: 'mediacafe' },
+    update: {
+      businessName: 'Media Solutions Cafe',
+      businessAddress: '123 Nguyen Hue, Quan 1, HCMC',
+      country: 'Vietnam',
+      ownerName: 'Nguyen Van A',
+      ownerEmail: businessEmail,
+      ownerPhone: '0901234567',
+      status: TenantStatus.ACTIVE,
+      planId: premiumPlan?.id,
+      subscriptionStartAt: new Date(),
+      subscriptionEndAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1 year
+    },
+    create: {
+      tenantCode: 'mediacafe',
+      businessName: 'Media Solutions Cafe',
+      businessAddress: '123 Nguyen Hue, Quan 1, HCMC',
+      country: 'Vietnam',
+      ownerName: 'Nguyen Van A',
+      ownerEmail: businessEmail,
+      ownerPhone: '0901234567',
+      status: TenantStatus.ACTIVE,
+      planId: premiumPlan?.id,
+      subscriptionStartAt: new Date(),
+      subscriptionEndAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1 year
+    },
+  });
+
+  await prisma.user.upsert({
+    where: { email: businessEmail },
+    update: {
+      fullName: 'Nguyen Van A (CEO)',
+      passwordHash: businessPasswordHash,
+      role: UserRole.BUSINESS_OWNER,
+      status: UserStatus.ACTIVE,
+      tenantId: tenant.id,
+      emailVerifiedAt: new Date(),
+    },
+    create: {
+      fullName: 'Nguyen Van A (CEO)',
+      email: businessEmail,
+      passwordHash: businessPasswordHash,
+      role: UserRole.BUSINESS_OWNER,
+      status: UserStatus.ACTIVE,
+      tenantId: tenant.id,
       emailVerifiedAt: new Date(),
     },
   });
