@@ -89,15 +89,23 @@ export default function LanguageSelector() {
     document.cookie = cookieString;
     document.cookie = cookieStringNoDomain;
 
-    // Trigger translate dropdown programmatic changes
-    const googleSelect = document.querySelector('.goog-te-combo') as HTMLSelectElement;
-    if (googleSelect) {
-      googleSelect.value = langCode;
-      googleSelect.dispatchEvent(new Event('change'));
-    } else {
-      // Fallback reload to apply translation cookie if Google is not fully mounted yet
-      window.location.reload();
-    }
+    // Polling lookup for .goog-te-combo to prevent slow page reloads!
+    let attempts = 0;
+    const interval = setInterval(() => {
+      const googleSelect = document.querySelector('.goog-te-combo') as HTMLSelectElement;
+      if (googleSelect) {
+        googleSelect.value = langCode;
+        googleSelect.dispatchEvent(new Event('change'));
+        clearInterval(interval);
+      } else {
+        attempts++;
+        if (attempts >= 20) { // Max 2 seconds
+          clearInterval(interval);
+          // Safe fallback if scripts are blocked by firewalls or extensions
+          window.location.reload();
+        }
+      }
+    }, 100);
   };
 
   const getLanguageName = (code: string) => {
@@ -113,20 +121,20 @@ export default function LanguageSelector() {
 
       <button
         onClick={() => setDropdownOpen(!dropdownOpen)}
-        className="flex items-center gap-2 rounded-lg border border-slate-800 bg-slate-900/40 px-3 py-2 text-xs text-slate-300 font-semibold transition hover:bg-slate-850 hover:text-white"
+        className="flex items-center gap-2 rounded-lg border border-slate-800 bg-slate-900/40 px-3 py-2 text-xs text-slate-300 font-semibold transition-all duration-200 ease-out hover:bg-slate-800 hover:border-slate-700 hover:text-white"
         title="Translate Website"
       >
-        <Globe className="h-4 w-4 text-indigo-400" />
+        <Globe className="h-4 w-4 text-indigo-400 animate-pulse" />
         <span className="hidden sm:inline">
           {activeLang.flag} {activeLang.name}
         </span>
-        <ChevronDown className="h-3 w-3 text-slate-500" />
+        <ChevronDown className={`h-3 w-3 text-slate-500 transition-transform duration-200 ${dropdownOpen ? 'rotate-180' : ''}`} />
       </button>
 
       {dropdownOpen && (
         <>
           <div className="fixed inset-0 z-10" onClick={() => setDropdownOpen(false)} />
-          <div className="absolute right-0 mt-2 w-48 origin-top-right rounded-xl border border-slate-800 bg-slate-900 p-1.5 shadow-xl ring-1 ring-black/5 z-20">
+          <div className="absolute right-0 mt-2 w-48 origin-top-right rounded-xl border border-slate-800 bg-slate-900 p-1.5 shadow-2xl ring-1 ring-black/5 z-20 transition-all duration-200 ease-out transform scale-100 opacity-100 animate-in fade-in slide-in-from-top-2">
             <div className="px-2.5 py-1.5 border-b border-slate-850 text-[10px] uppercase font-bold tracking-wider text-slate-500">
               Select Language
             </div>
@@ -137,9 +145,9 @@ export default function LanguageSelector() {
                   <button
                     key={lang.code}
                     onClick={() => handleLanguageChange(lang.code)}
-                    className={`flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-left text-xs font-semibold transition ${
+                    className={`flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-left text-xs font-semibold transition-all duration-150 ${
                       isActive
-                        ? 'bg-indigo-600/10 text-indigo-300'
+                        ? 'bg-indigo-600/15 text-indigo-300'
                         : 'text-slate-400 hover:bg-slate-800 hover:text-white'
                     }`}
                   >
